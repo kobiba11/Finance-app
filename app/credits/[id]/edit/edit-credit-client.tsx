@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, ArrowRight } from "lucide-react";
+import {
+  Save,
+  ArrowRight,
+  Wallet,
+  CalendarDays,
+  BadgePercent,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import BottomNav from "../../../components/bottom-nav";
 
@@ -96,36 +102,45 @@ export default function EditCreditClient({ credit }: Props) {
   };
 
   return (
-    <main className="min-h-screen bg-[#f5f7f8] pb-24">
+    <main className="min-h-screen bg-gradient-to-b from-emerald-300 via-teal-400 to-cyan-500 pb-24">
       <div className="mx-auto max-w-[440px] px-4 py-6">
-        <button
-          type="button"
-          onClick={() => router.push("/credits")}
-          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-500"
-        >
-          <ArrowRight size={16} />
-          חזרה לזיכויים
-        </button>
+        <section className="mb-4 rounded-[2rem] border border-white/35 bg-white/92 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+          <div className="flex items-start justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/credits")}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm"
+            >
+              <ArrowRight size={18} />
+            </button>
 
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900">עריכת זיכוי</h1>
-          <p className="mt-1 text-sm text-slate-500">עדכון פרטי הזיכוי</p>
-        </div>
+            <div className="min-w-0 text-right">
+              <p className="text-xs font-medium text-slate-500">עדכון פרטי זיכוי</p>
+              <h1 className="mt-1 text-3xl font-bold text-slate-900">עריכת זיכוי</h1>
+              <p className="mt-1 text-sm text-slate-500">
+                שנה פרטים ושמור בחזרה לרשימה
+              </p>
+            </div>
+          </div>
+        </section>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="rounded-3xl bg-white p-4 shadow-sm">
+          <section className="rounded-[2rem] border border-white/35 bg-white/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
             <div className="grid gap-4">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   חברה
                 </label>
-                <input
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  placeholder="למשל: שופרסל"
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
-                  required
-                />
+                <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <Wallet size={16} className="text-emerald-500" />
+                  <input
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    placeholder="למשל: שופרסל"
+                    className="w-full bg-transparent text-sm outline-none"
+                    required
+                  />
+                </div>
               </div>
 
               <div>
@@ -136,7 +151,7 @@ export default function EditCreditClient({ credit }: Props) {
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="למשל: בקבוקים"
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
                 />
               </div>
 
@@ -150,7 +165,7 @@ export default function EditCreditClient({ credit }: Props) {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0"
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
                   />
                 </div>
 
@@ -162,7 +177,7 @@ export default function EditCreditClient({ credit }: Props) {
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
                     placeholder="ILS"
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
                   />
                 </div>
               </div>
@@ -172,24 +187,30 @@ export default function EditCreditClient({ credit }: Props) {
                   <label className="mb-2 block text-sm font-medium text-slate-700">
                     תאריך קבלה
                   </label>
-                  <input
-                    type="date"
-                    value={receivedDate}
-                    onChange={(e) => setReceivedDate(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
-                  />
+                  <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                    <CalendarDays size={16} className="text-teal-500" />
+                    <input
+                      type="date"
+                      value={receivedDate}
+                      onChange={(e) => setReceivedDate(e.target.value)}
+                      className="w-full bg-transparent text-sm outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-700">
                     תאריך תפוגה
                   </label>
-                  <input
-                    type="date"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
-                  />
+                  <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                    <CalendarDays size={16} className="text-cyan-500" />
+                    <input
+                      type="date"
+                      value={expiryDate}
+                      onChange={(e) => setExpiryDate(e.target.value)}
+                      className="w-full bg-transparent text-sm outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -201,7 +222,7 @@ export default function EditCreditClient({ credit }: Props) {
                   value={redeemMethod}
                   onChange={(e) => setRedeemMethod(e.target.value)}
                   placeholder="למשל: שובר בקופה"
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
                 />
               </div>
 
@@ -213,7 +234,7 @@ export default function EditCreditClient({ credit }: Props) {
                   value={contactInfo}
                   onChange={(e) => setContactInfo(e.target.value)}
                   placeholder="טלפון / מייל / אתר"
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
                 />
               </div>
 
@@ -221,25 +242,28 @@ export default function EditCreditClient({ credit }: Props) {
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   סטטוס
                 </label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
-                >
-                  <option value="available">זמין</option>
-                  <option value="partially_used">נוצל חלקית</option>
-                  <option value="used">נוצל</option>
-                  <option value="expired">פג תוקף</option>
-                </select>
+                <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <BadgePercent size={16} className="text-emerald-500" />
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="w-full bg-transparent text-sm outline-none"
+                  >
+                    <option value="available">זמין</option>
+                    <option value="partially_used">נוצל חלקית</option>
+                    <option value="used">נוצל</option>
+                    <option value="expired">פג תוקף</option>
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="flex gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => router.push("/credits")}
-              className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm"
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm font-medium text-slate-700"
             >
               ביטול
             </button>
@@ -247,7 +271,7 @@ export default function EditCreditClient({ credit }: Props) {
             <button
               type="submit"
               disabled={loading}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-4 py-4 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(16,185,129,0.28)] disabled:opacity-60"
             >
               <Save size={16} />
               {loading ? "שומר..." : "שמור שינויים"}
@@ -256,7 +280,7 @@ export default function EditCreditClient({ credit }: Props) {
         </form>
 
         {message && (
-          <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm text-red-600">
+          <div className="mt-4 rounded-[1.5rem] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             {message}
           </div>
         )}

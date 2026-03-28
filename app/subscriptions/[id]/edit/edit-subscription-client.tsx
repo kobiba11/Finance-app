@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, ArrowRight } from "lucide-react";
+import {
+  Save,
+  ArrowRight,
+  RefreshCcw,
+  CalendarDays,
+  CreditCard,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import BottomNav from "../../../components/bottom-nav";
 
@@ -68,80 +74,94 @@ export default function EditSubscriptionClient({ subscription }: Props) {
   };
 
   return (
-    <main className="min-h-screen bg-[#f5f7f8] pb-24">
+    <main className="min-h-screen bg-gradient-to-b from-teal-300 via-cyan-400 to-teal-500 pb-24">
       <div className="mx-auto max-w-[440px] px-4 py-6">
-        <button
-          type="button"
-          onClick={() => router.push("/subscriptions")}
-          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-500"
-        >
-          <ArrowRight size={16} />
-          חזרה למנויים
-        </button>
+        <section className="mb-4 rounded-[2rem] border border-white/35 bg-white/92 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+          <div className="flex items-start justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/subscriptions")}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm"
+            >
+              <ArrowRight size={18} />
+            </button>
 
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900">עריכת מנוי</h1>
-          <p className="mt-1 text-sm text-slate-500">עדכון פרטי המנוי</p>
-        </div>
+            <div className="min-w-0 text-right">
+              <p className="text-xs font-medium text-slate-500">עדכון פרטי מנוי</p>
+              <h1 className="mt-1 text-3xl font-bold text-slate-900">עריכת מנוי</h1>
+              <p className="mt-1 text-sm text-slate-500">
+                שנה פרטים ושמור בחזרה לרשימה
+              </p>
+            </div>
+          </div>
+        </section>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="rounded-3xl bg-white p-4 shadow-sm">
-            <div className="grid gap-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  שם המנוי
-                </label>
+          <section className="rounded-[2rem] border border-white/35 bg-white/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+            <label className="mb-3 block text-sm font-medium text-slate-500">
+              שם המנוי
+            </label>
+            <div className="rounded-[1.5rem] border border-slate-200 bg-white px-4 py-4">
+              <div className="flex items-center gap-3">
+                <RefreshCcw size={18} className="text-teal-500" />
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="למשל: נטפליקס"
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                  className="w-full bg-transparent text-base text-slate-800 outline-none"
                   required
                 />
               </div>
+            </div>
+          </section>
 
+          <section className="rounded-[2rem] border border-white/35 bg-white/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+            <div className="grid gap-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
+                <label className="mb-2 block text-sm font-medium text-slate-500">
                   ספק
                 </label>
                 <input
                   value={provider}
                   onChange={(e) => setProvider(e.target.value)}
                   placeholder="למשל: Netflix"
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                  <label className="mb-2 block text-sm font-medium text-slate-500">
                     מחיר
                   </label>
-                  <input
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    placeholder="0"
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
-                  />
+                  <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                    <CreditCard size={16} className="text-teal-500" />
+                    <input
+                      type="number"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder="0"
+                      className="w-full bg-transparent text-sm outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                  <label className="mb-2 block text-sm font-medium text-slate-500">
                     מטבע
                   </label>
                   <input
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
                     placeholder="ILS"
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                  <label className="mb-2 block text-sm font-medium text-slate-500">
                     תדירות חיוב
                   </label>
                   <select
@@ -157,7 +177,7 @@ export default function EditSubscriptionClient({ subscription }: Props) {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                  <label className="mb-2 block text-sm font-medium text-slate-500">
                     סטטוס
                   </label>
                   <select
@@ -174,41 +194,44 @@ export default function EditSubscriptionClient({ subscription }: Props) {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
+                <label className="mb-2 block text-sm font-medium text-slate-500">
                   תאריך חידוש
                 </label>
-                <input
-                  type="date"
-                  value={renewalDate}
-                  onChange={(e) => setRenewalDate(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
-                />
+                <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <CalendarDays size={16} className="text-teal-500" />
+                  <input
+                    type="date"
+                    value={renewalDate}
+                    onChange={(e) => setRenewalDate(e.target.value)}
+                    className="w-full bg-transparent text-sm outline-none"
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => router.push("/subscriptions")}
-              className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm"
-            >
-              ביטול
-            </button>
-
+          <div className="grid grid-cols-2 gap-3">
             <button
               type="submit"
               disabled={loading}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-500 px-4 py-4 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(20,184,166,0.28)] disabled:opacity-60"
             >
               <Save size={16} />
               {loading ? "שומר..." : "שמור שינויים"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/subscriptions")}
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm font-medium text-slate-700"
+            >
+              ביטול
             </button>
           </div>
         </form>
 
         {message && (
-          <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm text-red-600">
+          <div className="mt-4 rounded-[1.5rem] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             {message}
           </div>
         )}

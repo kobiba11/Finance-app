@@ -24,9 +24,9 @@ export default async function CreditsPage() {
 
   if (householdError || !householdMember) {
     return (
-      <main className="min-h-screen bg-[#f5f7f8] pb-24">
+      <main className="min-h-screen bg-gradient-to-b from-emerald-300 via-teal-400 to-cyan-500 pb-24">
         <div className="mx-auto max-w-[440px] px-4 py-6">
-          <div className="rounded-3xl bg-white p-6 text-center text-sm text-slate-500 shadow-sm">
+          <div className="rounded-[2rem] border border-white/35 bg-white/92 p-6 text-center text-sm text-slate-500 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
             לא נמצא household למשתמש
           </div>
         </div>

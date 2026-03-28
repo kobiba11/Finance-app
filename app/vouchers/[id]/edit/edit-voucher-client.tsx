@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, ArrowRight } from "lucide-react";
+import {
+  Save,
+  ArrowRight,
+  Gift,
+  CalendarDays,
+  Link as LinkIcon,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import BottomNav from "../../../components/bottom-nav";
 
@@ -101,36 +107,43 @@ export default function EditVoucherClient({ voucher }: Props) {
   };
 
   return (
-    <main className="min-h-screen bg-[#f5f7f8] pb-24">
+    <main className="min-h-screen bg-gradient-to-b from-teal-300 via-cyan-400 to-teal-500 pb-24">
       <div className="mx-auto max-w-[440px] px-4 py-6">
-        <button
-          type="button"
-          onClick={() => router.push("/vouchers")}
-          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-500"
-        >
-          <ArrowRight size={16} />
-          חזרה לשוברים
-        </button>
+        <section className="mb-4 rounded-[2rem] border border-white/35 bg-white/92 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+          <div className="flex items-start justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/vouchers")}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm"
+            >
+              <ArrowRight size={18} />
+            </button>
 
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900">עריכת שובר</h1>
-          <p className="mt-1 text-sm text-slate-500">עדכון פרטי השובר</p>
-        </div>
+            <div className="min-w-0 text-right">
+              <p className="text-xs font-medium text-slate-500">עדכון פרטי שובר</p>
+              <h1 className="mt-1 text-3xl font-bold text-slate-900">עריכת שובר</h1>
+              <p className="mt-1 text-sm text-slate-500">עדכון פרטי השובר</p>
+            </div>
+          </div>
+        </section>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="rounded-3xl bg-white p-4 shadow-sm">
+          <section className="rounded-[2rem] border border-white/35 bg-white/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
             <div className="grid gap-4">
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   שם השובר
                 </label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="למשל: שובר BUYME"
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
-                  required
-                />
+                <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <Gift size={16} className="text-teal-500" />
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="למשל: שובר BUYME"
+                    className="w-full bg-transparent text-sm outline-none"
+                    required
+                  />
+                </div>
               </div>
 
               <div>
@@ -141,7 +154,7 @@ export default function EditVoucherClient({ voucher }: Props) {
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                   placeholder="למשל: FOX"
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
                 />
               </div>
 
@@ -155,7 +168,7 @@ export default function EditVoucherClient({ voucher }: Props) {
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
                     placeholder="0"
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
                   />
                 </div>
 
@@ -167,7 +180,7 @@ export default function EditVoucherClient({ voucher }: Props) {
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
                     placeholder="ILS"
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
                   />
                 </div>
               </div>
@@ -180,7 +193,7 @@ export default function EditVoucherClient({ voucher }: Props) {
                   value={redeemWhere}
                   onChange={(e) => setRedeemWhere(e.target.value)}
                   placeholder="למשל: אתר / סניף / אפליקציה"
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
                 />
               </div>
 
@@ -192,7 +205,7 @@ export default function EditVoucherClient({ voucher }: Props) {
                   value={redemptionPlatform}
                   onChange={(e) => setRedemptionPlatform(e.target.value)}
                   placeholder="למשל: BUYME"
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
                 />
               </div>
 
@@ -200,12 +213,15 @@ export default function EditVoucherClient({ voucher }: Props) {
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   קישור למימוש
                 </label>
-                <input
-                  value={redemptionUrl}
-                  onChange={(e) => setRedemptionUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
-                />
+                <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <LinkIcon size={16} className="text-cyan-500" />
+                  <input
+                    value={redemptionUrl}
+                    onChange={(e) => setRedemptionUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full bg-transparent text-sm outline-none"
+                  />
+                </div>
               </div>
 
               <div>
@@ -216,7 +232,7 @@ export default function EditVoucherClient({ voucher }: Props) {
                   value={voucherCode}
                   onChange={(e) => setVoucherCode(e.target.value)}
                   placeholder="קוד / מספר שובר"
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
                 />
               </div>
 
@@ -225,12 +241,15 @@ export default function EditVoucherClient({ voucher }: Props) {
                   <label className="mb-2 block text-sm font-medium text-slate-700">
                     תאריך תפוגה
                   </label>
-                  <input
-                    type="date"
-                    value={expiryDate}
-                    onChange={(e) => setExpiryDate(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none"
-                  />
+                  <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                    <CalendarDays size={16} className="text-teal-500" />
+                    <input
+                      type="date"
+                      value={expiryDate}
+                      onChange={(e) => setExpiryDate(e.target.value)}
+                      className="w-full bg-transparent text-sm outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -249,13 +268,13 @@ export default function EditVoucherClient({ voucher }: Props) {
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
           <div className="flex gap-3">
             <button
               type="button"
               onClick={() => router.push("/vouchers")}
-              className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm"
+              className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700"
             >
               ביטול
             </button>
@@ -263,7 +282,7 @@ export default function EditVoucherClient({ voucher }: Props) {
             <button
               type="submit"
               disabled={loading}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-purple-500 px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(20,184,166,0.28)] disabled:opacity-60"
             >
               <Save size={16} />
               {loading ? "שומר..." : "שמור שינויים"}
@@ -272,7 +291,7 @@ export default function EditVoucherClient({ voucher }: Props) {
         </form>
 
         {message && (
-          <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm text-red-600">
+          <div className="mt-4 rounded-[1.5rem] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             {message}
           </div>
         )}

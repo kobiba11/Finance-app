@@ -1,10 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useState } from "react";
+import { formatCurrencyAmount } from "@/lib/currency";
 import SwipeableExpenseRow from "./swipeable-expense-row";
-import DeleteExpenseDialog from "./delete-expense-dialog";
 import {
   UtensilsCrossed,
   Car,
@@ -48,21 +48,14 @@ function getCategoryIcon(name: string) {
   }
 }
 
-function getCategoryColors(name: string) {
-  switch (name) {
-    case "אוכל":
-      return { badge: "bg-emerald-100 text-emerald-600" };
-    case "חשבונות":
-      return { badge: "bg-blue-100 text-blue-600" };
-    case "תחבורה":
-      return { badge: "bg-orange-100 text-orange-600" };
-    case "הוצאות בית":
-      return { badge: "bg-indigo-100 text-indigo-600" };
-    case "בילויים":
-      return { badge: "bg-pink-100 text-pink-600" };
-    default:
-      return { badge: "bg-slate-100 text-slate-600" };
-  }
+function formatExpenseDate(dateString: string) {
+  const date = new Date(dateString);
+
+  return date.toLocaleDateString("he-IL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  });
 }
 
 export default function LatestExpensesList({
@@ -70,98 +63,110 @@ export default function LatestExpensesList({
 }: LatestExpensesListProps) {
   const router = useRouter();
   const supabase = createClient();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const [deleteTarget, setDeleteTarget] = useState<LatestExpenseRow | null>(
-    null
-  );
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  if (!expenses.length) {
+    return (
+      <div className="rounded-[1.25rem] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-500">
+        עדיין אין הוצאות להצגה
+      </div>
+    );
+  }
 
-  const openDeleteDialog = (expense: LatestExpenseRow) => {
-    setDeleteTarget(expense);
-  };
-
-  const closeDeleteDialog = () => {
-    if (deleteLoading) return;
-    setDeleteTarget(null);
-  };
-
-  const confirmDeleteExpense = async () => {
-    if (!deleteTarget) return;
+  const handleDelete = async (expenseId: string) => {
+    const confirmed = window.confirm("בטוח שברצונך למחוק את ההוצאה?");
+    if (!confirmed) return;
 
     try {
-      setDeleteLoading(true);
+      setDeletingId(expenseId);
 
-      const { error } = await supabase
-        .from("expenses")
-        .delete()
-        .eq("id", deleteTarget.id);
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-      if (error) {
-        alert("שגיאה במחיקת ההוצאה.");
+      if (userError || !user) {
+        alert("המשתמש לא מחובר.");
         return;
       }
 
-      setDeleteTarget(null);
+      const { data: membership, error: membershipError } = await supabase
+        .from("household_members")
+        .select("household_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (membershipError || !membership?.household_id) {
+        alert("לא נמצא משק בית למשתמש.");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("expenses")
+        .delete()
+        .eq("id", expenseId)
+        .eq("household_id", membership.household_id)
+        .select("id")
+        .single();
+
+      if (error || !data) {
+        console.error("Delete expense error:", error);
+        alert("מחיקת ההוצאה נכשלה.");
+        return;
+      }
+
       router.refresh();
+    } catch (error) {
+      console.error("Unexpected delete error:", error);
+      alert("קרתה שגיאה לא צפויה במחיקה.");
     } finally {
-      setDeleteLoading(false);
+      setDeletingId(null);
     }
   };
 
-  const handleEditExpense = (expenseId: string) => {
-    router.push(`/expenses/${expenseId}`);
-  };
-
-  if (expenses.length === 0) {
-    return <p className="text-sm text-slate-500">עדיין אין הוצאות להצגה</p>;
-  }
-
   return (
-    <>
-      <div className="space-y-3">
-        {expenses.map((expense) => {
-          const categoryName = expense.categories?.name ?? "אחר";
-          const colors = getCategoryColors(categoryName);
+    <div className="space-y-2">
+      {expenses.map((expense) => {
+        const categoryName = expense.categories?.name ?? "אחר";
 
-          return (
-            <SwipeableExpenseRow
-              key={expense.id}
-              onEdit={() => handleEditExpense(expense.id)}
-              onDelete={() => openDeleteDialog(expense)}
+        return (
+          <SwipeableExpenseRow
+            key={expense.id}
+            onEdit={() => router.push(`/expenses/${expense.id}/edit`)}
+            onDelete={() => handleDelete(expense.id)}
+          >
+            <button
+              type="button"
+              disabled={deletingId === expense.id}
+              onClick={() => router.push(`/expenses/${expense.id}/edit`)}
+              className="flex w-full items-center justify-between gap-3 rounded-[1.25rem] border border-slate-200 bg-white/80 px-3 py-3 text-right transition hover:bg-white disabled:opacity-60"
             >
-              <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-3">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-2xl ${colors.badge}`}
-                  >
-                    {getCategoryIcon(categoryName)}
-                  </div>
-
-                  <div>
-                    <p className="font-medium text-slate-900">{expense.title}</p>
-                    <p className="text-xs text-slate-500">
-                      {categoryName} ·{" "}
-                      {new Date(expense.expense_date).toLocaleDateString("he-IL")}
-                    </p>
-                  </div>
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
+                  {getCategoryIcon(categoryName)}
                 </div>
 
-                <p className="font-semibold text-slate-900">
-                  ₪{Number(expense.amount).toFixed(2)}
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-900">
+                    {expense.title}
+                  </p>
+                  <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
+                    <span>{categoryName}</span>
+                    <span>•</span>
+                    <span>{formatExpenseDate(expense.expense_date)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="shrink-0 text-left">
+                <p className="text-sm font-bold text-slate-900">
+                  {formatCurrencyAmount(expense.amount, expense.currency)}
                 </p>
               </div>
-            </SwipeableExpenseRow>
-          );
-        })}
-      </div>
-
-      <DeleteExpenseDialog
-        open={!!deleteTarget}
-        title={deleteTarget?.title}
-        loading={deleteLoading}
-        onCancel={closeDeleteDialog}
-        onConfirm={confirmDeleteExpense}
-      />
-    </>
+            </button>
+          </SwipeableExpenseRow>
+        );
+      })}
+    </div>
   );
 }

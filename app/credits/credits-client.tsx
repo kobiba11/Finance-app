@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, Wallet, X } from "lucide-react";
+import { Plus, Wallet, X, BadgePercent, Clock3 } from "lucide-react";
 import BottomNav from "../components/bottom-nav";
 import AddCreditForm from "./components/add-credit-form";
 import FinanceItemRow from "../components/finance-item-row";
@@ -97,6 +97,15 @@ export default function CreditsClient({ householdId, credits }: Props) {
     ).length;
   }, [items]);
 
+  const expiringSoonCount = useMemo(() => {
+    return items.filter(
+      (item) =>
+        (item.status === "available" || item.status === "partially_used") &&
+        isDateWithinDays(item.expiry_date, 14) &&
+        !isPastDate(item.expiry_date)
+    ).length;
+  }, [items]);
+
   const requestDelete = (id: string) => {
     setDeleteId(id);
   };
@@ -133,47 +142,69 @@ export default function CreditsClient({ householdId, credits }: Props) {
   };
 
   return (
-    <main className="min-h-screen bg-[#f5f7f8] pb-24">
+    <main className="min-h-screen bg-gradient-to-b from-emerald-300 via-teal-400 to-cyan-500 pb-24">
       <div className="mx-auto max-w-[440px] px-4 py-6">
-        <div className="mb-6 flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">זיכויים</h1>
-            <p className="mt-1 text-sm text-slate-500">ניהול זיכויים והחזרים</p>
+        <section className="mb-4 rounded-[2rem] border border-white/35 bg-white/92 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-slate-500">ניהול זיכויים והחזרים</p>
+              <h1 className="mt-1 text-3xl font-bold text-slate-900">זיכויים</h1>
+              <p className="mt-1 text-sm text-slate-500">
+                מעקב אחרי החזרים, יתרות ותוקף
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsAddOpen(true)}
+              className="inline-flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
+            >
+              <Plus size={18} />
+              הוסף
+            </button>
           </div>
+        </section>
 
-          <button
-            type="button"
-            onClick={() => setIsAddOpen(true)}
-            className="flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition active:scale-[0.99]"
-          >
-            <Plus size={18} />
-            הוסף
-          </button>
-        </div>
-
-        <div className="mb-5 grid grid-cols-2 gap-3">
-          <div className="rounded-3xl bg-white p-4 shadow-sm">
-            <p className="text-sm text-slate-500">זיכויים זמינים</p>
-            <p className="mt-2 text-3xl font-bold text-emerald-600">
+        <section className="mb-4 grid grid-cols-3 gap-2">
+          <div className="rounded-[1.7rem] border border-white/35 bg-white/92 p-4 text-center shadow-[0_20px_60px_rgba(0,0,0,0.16)] backdrop-blur-xl">
+            <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
+              <Wallet size={18} />
+            </div>
+            <p className="text-xl font-bold text-emerald-600">
               {formatCurrency(availableTotal)}
             </p>
+            <p className="mt-1 text-[10px] text-slate-500">זיכויים זמינים</p>
           </div>
 
-          <div className="rounded-3xl bg-white p-4 shadow-sm">
-            <p className="text-sm text-slate-500">פתוחים</p>
-            <p className="mt-2 text-3xl font-bold text-slate-900">{openCount}</p>
+          <div className="rounded-[1.7rem] border border-white/35 bg-white/92 p-4 text-center shadow-[0_20px_60px_rgba(0,0,0,0.16)] backdrop-blur-xl">
+            <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-100 text-teal-600">
+              <BadgePercent size={18} />
+            </div>
+            <p className="text-xl font-bold text-slate-900">{openCount}</p>
+            <p className="mt-1 text-[10px] text-slate-500">פתוחים</p>
           </div>
-        </div>
+
+          <div className="rounded-[1.7rem] border border-white/35 bg-white/92 p-4 text-center shadow-[0_20px_60px_rgba(0,0,0,0.16)] backdrop-blur-xl">
+            <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-100 text-cyan-600">
+              <Clock3 size={18} />
+            </div>
+            <p className="text-xl font-bold text-slate-900">{expiringSoonCount}</p>
+            <p className="mt-1 text-[10px] text-slate-500">פגים בקרוב</p>
+          </div>
+        </section>
 
         {isAddOpen && (
-          <div className="mb-5 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <section className="mb-5 rounded-[2rem] border border-white/35 bg-white/92 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900">הוספת זיכוי</h2>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">הוספת זיכוי</h2>
+                <p className="mt-1 text-sm text-slate-500">מלא את פרטי הזיכוי ושמור</p>
+              </div>
 
               <button
                 type="button"
                 onClick={() => setIsAddOpen(false)}
-                className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100"
+                className="rounded-2xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-50"
               >
                 <X size={18} />
               </button>
@@ -186,10 +217,10 @@ export default function CreditsClient({ householdId, credits }: Props) {
                 router.refresh();
               }}
             />
-          </div>
+          </section>
         )}
 
-        <p className="mb-4 text-center text-xs text-slate-400">
+        <p className="mb-4 text-center text-xs text-white/80">
           החלק ימינה לעריכה · שמאלה למחיקה
         </p>
 
@@ -244,14 +275,14 @@ export default function CreditsClient({ householdId, credits }: Props) {
               );
             })
           ) : (
-            <div className="rounded-3xl bg-white p-6 text-center text-sm text-slate-500 shadow-sm">
+            <div className="rounded-[2rem] border border-white/35 bg-white/92 p-6 text-center text-sm text-slate-500 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
               עדיין אין זיכויים
             </div>
           )}
         </div>
 
         {message && (
-          <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm text-red-600">
+          <div className="mt-4 rounded-[1.5rem] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             {message}
           </div>
         )}

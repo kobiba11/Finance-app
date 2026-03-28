@@ -91,25 +91,53 @@ export default function ExpensesList({
     try {
       setDeleteLoading(true);
 
-      const { error } = await supabase
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        alert("המשתמש לא מחובר.");
+        return;
+      }
+
+      const { data: membership, error: membershipError } = await supabase
+        .from("household_members")
+        .select("household_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (membershipError || !membership?.household_id) {
+        alert("לא נמצא משק בית למשתמש.");
+        return;
+      }
+
+      const { data, error } = await supabase
         .from("expenses")
         .delete()
-        .eq("id", deleteTarget.id);
+        .eq("id", deleteTarget.id)
+        .eq("household_id", membership.household_id)
+        .select("id")
+        .single();
 
-      if (error) {
-        alert("שגיאה במחיקת ההוצאה.");
+      if (error || !data) {
+        console.error("Delete expense error:", error);
+        alert(error?.message || "שגיאה במחיקת ההוצאה.");
         return;
       }
 
       setDeleteTarget(null);
       router.refresh();
+    } catch (error) {
+      console.error("Unexpected delete error:", error);
+      alert("קרתה שגיאה לא צפויה במחיקה.");
     } finally {
       setDeleteLoading(false);
     }
   };
 
   const handleEditExpense = (expenseId: string) => {
-    router.push(`/expenses/${expenseId}`);
+    router.push(`/expenses/${expenseId}/edit`);
   };
 
   if (expenses.length === 0) {
@@ -129,7 +157,11 @@ export default function ExpensesList({
               onEdit={() => handleEditExpense(expense.id)}
               onDelete={() => openDeleteDialog(expense)}
             >
-              <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-3">
+              <button
+                type="button"
+                onClick={() => handleEditExpense(expense.id)}
+                className="flex w-full items-center justify-between rounded-2xl bg-white px-3 py-3 text-right transition hover:bg-slate-50"
+              >
                 <div className="flex items-center gap-3">
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-2xl ${colors.badge}`}
@@ -137,7 +169,7 @@ export default function ExpensesList({
                     {getCategoryIcon(categoryName)}
                   </div>
 
-                  <div>
+                  <div className="text-right">
                     <p className="font-medium text-slate-900">{expense.title}</p>
                     <p className="text-xs text-slate-500">
                       {categoryName} ·{" "}
@@ -149,7 +181,7 @@ export default function ExpensesList({
                 <p className="font-semibold text-slate-900">
                   ₪{Number(expense.amount).toFixed(2)}
                 </p>
-              </div>
+              </button>
             </SwipeableExpenseRow>
           );
         })}

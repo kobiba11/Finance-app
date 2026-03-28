@@ -1,12 +1,14 @@
+import { ReactNode } from "react";
+
 type AppCardProps = {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 };
 
 export default function AppCard({ children, className = "" }: AppCardProps) {
   return (
     <div
-      className={`rounded-3xl border border-slate-200 bg-white p-4 shadow-sm ${className}`}
+      className={`rounded-[1.75rem] border border-white/35 bg-white/95 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl ${className}`}
     >
       {children}
     </div>

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import BottomNav from "../../components/bottom-nav";
 import {
+  ArrowRight,
   Camera,
   FileText,
   CalendarDays,
@@ -40,38 +41,44 @@ function getCategoryVisual(name: string) {
     case "אוכל":
       return {
         icon: UtensilsCrossed,
-        active: "bg-emerald-500 text-white",
-        idle: "bg-white text-slate-700",
+        active:
+          "border-transparent bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-md",
+        idle: "border-slate-200 bg-white text-slate-700",
       };
     case "הוצאות בית":
       return {
         icon: Home,
-        active: "bg-emerald-500 text-white",
-        idle: "bg-white text-slate-700",
+        active:
+          "border-transparent bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-md",
+        idle: "border-slate-200 bg-white text-slate-700",
       };
     case "חשבונות":
       return {
         icon: Receipt,
-        active: "bg-emerald-500 text-white",
-        idle: "bg-white text-slate-700",
+        active:
+          "border-transparent bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-md",
+        idle: "border-slate-200 bg-white text-slate-700",
       };
     case "בילויים":
       return {
         icon: PartyPopper,
-        active: "bg-emerald-500 text-white",
-        idle: "bg-white text-slate-700",
+        active:
+          "border-transparent bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-md",
+        idle: "border-slate-200 bg-white text-slate-700",
       };
     case "תחבורה":
       return {
         icon: Car,
-        active: "bg-emerald-500 text-white",
-        idle: "bg-white text-slate-700",
+        active:
+          "border-transparent bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-md",
+        idle: "border-slate-200 bg-white text-slate-700",
       };
     default:
       return {
         icon: CircleEllipsis,
-        active: "bg-emerald-500 text-white",
-        idle: "bg-white text-slate-700",
+        active:
+          "border-transparent bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-md",
+        idle: "border-slate-200 bg-white text-slate-700",
       };
   }
 }
@@ -157,9 +164,14 @@ export default function NewExpensePageClient() {
 
         const categoryFromUrl = searchParams.get("category");
         const titleFromUrl = searchParams.get("title");
+        const amountFromUrl = searchParams.get("amount");
 
         if (titleFromUrl) {
           setTitle(titleFromUrl);
+        }
+
+        if (amountFromUrl) {
+          setAmount(amountFromUrl);
         }
 
         if (categoryFromUrl) {
@@ -252,9 +264,11 @@ export default function NewExpensePageClient() {
 
   if (pageLoading) {
     return (
-      <main className="min-h-screen bg-[#f5f7f8] pb-24">
+      <main className="min-h-screen bg-gradient-to-b from-emerald-300 via-teal-400 to-cyan-600 pb-24">
         <div className="mx-auto max-w-[440px] px-4 py-6">
-          <p className="text-center text-slate-500">טוען...</p>
+          <div className="rounded-[2rem] border border-white/35 bg-white/92 p-6 text-center shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+            <p className="text-sm font-medium text-slate-500">טוען...</p>
+          </div>
         </div>
         <BottomNav />
       </main>
@@ -262,18 +276,38 @@ export default function NewExpensePageClient() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f7f8] pb-24">
+    <main className="min-h-screen bg-gradient-to-b from-emerald-300 via-teal-400 to-cyan-600 pb-24">
       <div className="mx-auto max-w-[440px] px-4 py-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">הוצאה חדשה</h1>
-          <p className="mt-1 text-sm text-slate-500">עקוב אחרי ההוצאות שלך</p>
-        </div>
+        <section className="mb-4 rounded-[2rem] border border-white/35 bg-white/92 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+          <div className="flex items-start justify-between gap-3">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm"
+            >
+              <ArrowRight size={18} />
+            </button>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <section>
-            <label className="mb-2 block text-sm text-slate-500">סכום</label>
+            <div className="min-w-0 text-right">
+              <p className="text-xs font-medium text-slate-500">הוספה חדשה</p>
+              <h1 className="mt-1 text-3xl font-bold text-slate-900">
+                הוצאה חדשה
+              </h1>
+              <p className="mt-1 text-sm text-slate-500">
+                עקוב אחרי ההוצאות שלך
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <section className="rounded-[2rem] border border-white/35 bg-white/92 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+            <label className="mb-3 block text-sm font-medium text-slate-500">
+              סכום
+            </label>
+
             <div className="flex items-center justify-center gap-3">
-              <span className="text-5xl font-semibold text-slate-500">₪</span>
+              <span className="text-5xl font-semibold text-emerald-500">₪</span>
               <input
                 type="number"
                 step="0.01"
@@ -287,9 +321,12 @@ export default function NewExpensePageClient() {
             </div>
           </section>
 
-          <section>
-            <label className="mb-3 block text-sm text-slate-500">קטגוריה</label>
-            <div className="grid grid-cols-3 gap-3">
+          <section className="rounded-[2rem] border border-white/35 bg-white/92 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+            <label className="mb-3 block text-sm font-medium text-slate-500">
+              קטגוריה
+            </label>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {categories.map((category) => {
                 const isActive = selectedCategoryId === category.id;
                 const visual = getCategoryVisual(category.name);
@@ -300,7 +337,7 @@ export default function NewExpensePageClient() {
                     key={category.id}
                     type="button"
                     onClick={() => setSelectedCategoryId(category.id)}
-                    className={`rounded-2xl px-4 py-3 text-sm font-medium shadow-sm transition ${
+                    className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
                       isActive ? visual.active : visual.idle
                     }`}
                   >
@@ -314,32 +351,53 @@ export default function NewExpensePageClient() {
             </div>
           </section>
 
-          <section>
-            <label className="mb-3 block text-sm text-slate-500">תיאור</label>
-            <div className="rounded-3xl bg-white p-4 shadow-sm">
-              <textarea
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="על מה ההוצאה?"
-                className="min-h-[110px] w-full resize-none bg-transparent text-base text-slate-700 outline-none placeholder:text-slate-400"
-              />
-            </div>
+          <section className="rounded-[2rem] border border-white/35 bg-white/92 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+            <label className="mb-3 block text-sm font-medium text-slate-500">
+              תיאור
+            </label>
+
+            <textarea
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="על מה ההוצאה?"
+              className="min-h-[110px] w-full resize-none rounded-[1.5rem] border border-slate-200 bg-white px-4 py-4 text-base text-slate-700 outline-none placeholder:text-slate-400"
+            />
           </section>
 
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => setIsFavorite((prev) => !prev)}
-              className="flex items-center gap-2 text-sm text-slate-500"
-            >
-              <FileText size={16} />
-              <span>{isFavorite ? "הערה אישית נוספה" : "הוסף הערה אישית"}</span>
-            </button>
-          </div>
+          <section className="rounded-[2rem] border border-white/35 bg-white/92 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+            <div className="mb-3 flex items-center justify-between">
+              <label className="block text-sm font-medium text-slate-500">
+                הערות
+              </label>
 
-          <section>
-            <label className="mb-3 block text-sm text-slate-500">תאריך</label>
-            <div className="rounded-3xl bg-white px-4 py-4 shadow-sm">
+              <button
+                type="button"
+                onClick={() => setIsFavorite((prev) => !prev)}
+                className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                  isFavorite
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                <FileText size={14} />
+                {isFavorite ? "סומן כמועדף" : "סמן כמועדף"}
+              </button>
+            </div>
+
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="הערה אישית על ההוצאה..."
+              className="min-h-[90px] w-full resize-none rounded-[1.5rem] border border-slate-200 bg-white px-4 py-4 text-sm text-slate-700 outline-none placeholder:text-slate-400"
+            />
+          </section>
+
+          <section className="rounded-[2rem] border border-white/35 bg-white/92 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+            <label className="mb-3 block text-sm font-medium text-slate-500">
+              תאריך
+            </label>
+
+            <div className="rounded-[1.5rem] border border-slate-200 bg-white px-4 py-4">
               <div className="flex items-center justify-between gap-3">
                 <input
                   type="date"
@@ -353,13 +411,14 @@ export default function NewExpensePageClient() {
             </div>
           </section>
 
-          <section>
-            <label className="mb-3 block text-sm text-slate-500">
+          <section className="rounded-[2rem] border border-white/35 bg-white/92 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+            <label className="mb-3 block text-sm font-medium text-slate-500">
               קבלה (אופציונלי)
             </label>
+
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-slate-200 bg-white px-4 py-6 text-sm text-slate-500"
+              className="flex w-full items-center justify-center gap-2 rounded-[1.5rem] border-2 border-dashed border-emerald-200 bg-emerald-50/60 px-4 py-6 text-sm font-medium text-emerald-700"
             >
               <Camera size={18} />
               סרוק קבלה / מילוי אוטומטי
@@ -367,16 +426,16 @@ export default function NewExpensePageClient() {
           </section>
 
           {message && (
-            <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
+            <div className="rounded-[1.5rem] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               {message}
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3 pt-2">
+          <div className="grid grid-cols-2 gap-3 pb-2">
             <button
               type="submit"
               disabled={loading}
-              className="rounded-2xl bg-emerald-500 px-4 py-4 text-base font-semibold text-white shadow-sm disabled:opacity-50"
+              className="rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-4 py-4 text-base font-semibold text-white shadow-[0_16px_40px_rgba(16,185,129,0.28)] disabled:opacity-50"
             >
               {loading ? "מוסיף..." : "הוסף הוצאה"}
             </button>
@@ -384,7 +443,7 @@ export default function NewExpensePageClient() {
             <button
               type="button"
               onClick={handleCancel}
-              className="rounded-2xl bg-slate-100 px-4 py-4 text-base font-medium text-slate-700"
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-base font-medium text-slate-700"
             >
               ביטול
             </button>

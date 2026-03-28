@@ -3,16 +3,16 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import AppShell from "../components/app-shell";
 import AppCard from "../components/app-card";
-import PageHeader from "../components/page-header";
 import BottomNav from "../components/bottom-nav";
 import LatestExpensesList from "../components/latest-expenses-list";
 import AttentionSection from "../components/attention-section";
-import ExpensesList from "../components/expenses-list";
+import BudgetOverviewCard from "../components/budget-overview-card";
 import {
   getRenewingSubscriptions,
   getExpiringVouchers,
   getExpiringCredits,
 } from "src/lib/attention-items";
+import { getCurrencySymbol } from "@/lib/currency";
 import {
   Plus,
   UtensilsCrossed,
@@ -20,7 +20,6 @@ import {
   Home,
   Receipt,
   PartyPopper,
-  CircleEllipsis,
   CalendarDays,
   TrendingDown,
   DollarSign,
@@ -46,6 +45,12 @@ type ExpenseRow = {
 type BudgetRow = {
   amount: number;
   currency: string;
+};
+
+type HouseholdRow = {
+  id: string;
+  name: string;
+  base_currency: string;
 };
 
 type ProfileRow = {
@@ -92,37 +97,20 @@ function getMonthName(date: Date) {
   });
 }
 
-function getCategoryIcon(name: string) {
-  switch (name) {
-    case "אוכל":
-      return <UtensilsCrossed size={18} />;
-    case "תחבורה":
-      return <Car size={18} />;
-    case "הוצאות בית":
-      return <Home size={18} />;
-    case "חשבונות":
-      return <Receipt size={18} />;
-    case "בילויים":
-      return <PartyPopper size={18} />;
-    default:
-      return <CircleEllipsis size={18} />;
-  }
-}
-
 function getCategoryColors(name: string) {
   switch (name) {
     case "אוכל":
-      return { badge: "bg-emerald-100 text-emerald-600", dot: "#10b981" };
+      return { dot: "#10b981" };
     case "חשבונות":
-      return { badge: "bg-blue-100 text-blue-600", dot: "#3b82f6" };
+      return { dot: "#3b82f6" };
     case "תחבורה":
-      return { badge: "bg-orange-100 text-orange-600", dot: "#f97316" };
+      return { dot: "#f97316" };
     case "הוצאות בית":
-      return { badge: "bg-indigo-100 text-indigo-600", dot: "#6366f1" };
+      return { dot: "#6366f1" };
     case "בילויים":
-      return { badge: "bg-pink-100 text-pink-600", dot: "#ec4899" };
+      return { dot: "#ec4899" };
     default:
-      return { badge: "bg-slate-100 text-slate-600", dot: "#94a3b8" };
+      return { dot: "#94a3b8" };
   }
 }
 
@@ -150,6 +138,12 @@ function buildConicGradient(
   return `conic-gradient(${segments.join(", ")})`;
 }
 
+function getMonthKey(date: Date) {
+  const year = date.getFullYear();
+  const monthNumber = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}-${monthNumber}-01`;
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
 
@@ -169,9 +163,9 @@ export default async function DashboardPage() {
   const nextMonthStart = new Date(currentYear, currentMonth + 1, 1);
   const prevMonthStart = new Date(currentYear, currentMonth - 1, 1);
 
-  const monthStartStr = monthStart.toISOString().split("T")[0];
-  const nextMonthStartStr = nextMonthStart.toISOString().split("T")[0];
-  const prevMonthStartStr = prevMonthStart.toISOString().split("T")[0];
+  const monthStartStr = getMonthKey(monthStart);
+  const nextMonthStartStr = getMonthKey(nextMonthStart);
+  const prevMonthStartStr = getMonthKey(prevMonthStart);
 
   const { data: membership, error: membershipError } = await supabase
     .from("household_members")
@@ -180,7 +174,7 @@ export default async function DashboardPage() {
     .limit(1)
     .maybeSingle<HouseholdMember>();
 
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile } = await supabase
     .from("profiles")
     .select("full_name")
     .eq("id", user.id)
@@ -201,45 +195,38 @@ export default async function DashboardPage() {
   if (membershipError || !membership?.household_id) {
     return (
       <AppShell>
-        <PageHeader
-          title={`שלום, ${displayName} 👋`}
-          subtitle="לא נמצא משק בית למשתמש הזה"
-          action={
-            <Link
-              href="/expenses/new"
-              className="flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-sm"
-            >
-              <Plus size={18} />
-              הוסף
-            </Link>
-          }
-        />
+        <main className="mx-auto w-full max-w-[430px] px-4 pb-20 pt-6">
+          <div className="mb-4 rounded-full bg-white/85 px-4 py-3 shadow-[0_12px_40px_rgba(15,23,42,0.12)] backdrop-blur-xl" />
 
-        <AppCard>
-          <p className="mb-2 text-sm text-slate-500">
-            צריך קודם לשייך את המשתמש שלך ל־household_members כדי שהדאשבורד יוכל
-            להציג נתונים.
-          </p>
+          <AppCard className="mb-4 !p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium text-slate-500">ברוך הבא</p>
+                <h1 className="mt-1 text-2xl font-bold text-slate-900">
+                  שלום, {displayName} 👋
+                </h1>
+                <p className="mt-1 text-sm text-slate-500">
+                  לא נמצא משק בית למשתמש הזה
+                </p>
+              </div>
 
-          {membershipError ? (
-            <p className="text-xs text-red-600">
-              שגיאת מערכת: {membershipError.message}
+              <Link
+                href="/expenses/new"
+                className="inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
+              >
+                <Plus size={16} />
+                הוסף
+              </Link>
+            </div>
+          </AppCard>
+
+          <AppCard>
+            <p className="text-sm text-slate-600">
+              צריך קודם לשייך את המשתמש שלך ל־household_members כדי שהדאשבורד
+              יוכל להציג נתונים.
             </p>
-          ) : null}
-
-          {profileError ? (
-            <p className="mt-2 text-xs text-red-600">
-              שגיאת פרופיל: {profileError.message}
-            </p>
-          ) : null}
-
-          <div className="mt-4 rounded-2xl bg-slate-50 p-3 text-xs text-slate-600">
-            <p>user.id: {user.id}</p>
-            <p>full_name מה-auth: {fullNameFromAuth || "ריק"}</p>
-            <p>full_name מה-profile: {profile?.full_name || "ריק"}</p>
-            <p>household_id: {membership?.household_id || "לא נמצא"}</p>
-          </div>
-        </AppCard>
+          </AppCard>
+        </main>
 
         <BottomNav />
       </AppShell>
@@ -249,6 +236,7 @@ export default async function DashboardPage() {
   const householdId = membership.household_id;
 
   const [
+    householdResult,
     currentMonthExpensesResult,
     previousMonthExpensesResult,
     latestExpensesResult,
@@ -259,9 +247,15 @@ export default async function DashboardPage() {
     expenseTemplatesResult,
   ] = await Promise.all([
     supabase
+      .from("households")
+      .select("id, name, base_currency")
+      .eq("id", householdId)
+      .limit(1)
+      .maybeSingle<HouseholdRow>(),
+
+    supabase
       .from("expenses")
-      .select(
-        `
+      .select(`
         id,
         title,
         amount,
@@ -272,8 +266,7 @@ export default async function DashboardPage() {
           name,
           icon
         )
-      `
-      )
+      `)
       .eq("household_id", householdId)
       .gte("expense_date", monthStartStr)
       .lt("expense_date", nextMonthStartStr)
@@ -289,8 +282,7 @@ export default async function DashboardPage() {
 
     supabase
       .from("expenses")
-      .select(
-        `
+      .select(`
         id,
         title,
         amount,
@@ -301,8 +293,7 @@ export default async function DashboardPage() {
           name,
           icon
         )
-      `
-      )
+      `)
       .eq("household_id", householdId)
       .order("expense_date", { ascending: false })
       .order("created_at", { ascending: false })
@@ -333,8 +324,7 @@ export default async function DashboardPage() {
 
     supabase
       .from("expense_templates")
-      .select(
-        `
+      .select(`
         id,
         title,
         default_amount,
@@ -344,13 +334,14 @@ export default async function DashboardPage() {
           name,
           icon
         )
-      `
-      )
+      `)
       .eq("household_id", householdId)
       .eq("is_active", true)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true }),
   ]);
+
+  const household = householdResult.data ?? null;
 
   const currentMonthExpenses =
     (currentMonthExpensesResult.data as ExpenseRow[] | null) ?? [];
@@ -364,8 +355,11 @@ export default async function DashboardPage() {
   const vouchers = (vouchersResult.data as VoucherAttentionRow[] | null) ?? [];
   const credits = (creditsResult.data as CreditAttentionRow[] | null) ?? [];
   const expenseTemplates =
-    ((expenseTemplatesResult.data ?? []) as unknown as ExpenseTemplateRow[]) ??
-    [];
+    ((expenseTemplatesResult.data ?? []) as ExpenseTemplateRow[]) ?? [];
+
+  const currencySymbol = getCurrencySymbol(
+    household?.base_currency ?? budget?.currency ?? "ILS"
+  );
 
   const renewingSubscriptions = getRenewingSubscriptions(subscriptions).map(
     (item) => ({
@@ -472,248 +466,217 @@ export default async function DashboardPage() {
 
   return (
     <AppShell>
-      <PageHeader
-        title={`שלום, ${displayName} 👋`}
-        subtitle={getMonthName(now)}
-        action={
-          <Link
-            href="/expenses/new"
-            className="flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
-          >
-            <Plus size={18} />
-            הוסף
-          </Link>
-        }
-      />
-
-      <AttentionSection items={attentionItems} />
-
-      <AppCard className="mb-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-900">הוספה מהירה</h2>
-          <span className="text-emerald-500">⚡</span>
-        </div>
-
-        <div className="grid grid-cols-5 gap-3">
-          {quickActions.map(({ label, icon: Icon, category, title }) => (
-            <Link
-              key={label}
-              href={{
-                pathname: "/expenses/new",
-                query: { category, title },
-              }}
-              className="flex flex-col items-center gap-2 rounded-2xl bg-slate-50 px-2 py-4 transition hover:bg-slate-100"
-            >
-              <div className="rounded-2xl bg-slate-100 p-3 text-slate-700">
-                <Icon size={18} />
-              </div>
-              <span className="text-[11px] font-medium text-slate-700">
-                {label}
-              </span>
-            </Link>
-          ))}
-        </div>
-
-        <details className="mt-4 rounded-2xl bg-slate-50">
-          <summary className="cursor-pointer list-none px-4 py-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-slate-700">
-                תבניות מהירות
-              </span>
-              <span className="text-slate-400">⌄</span>
+      <main className="mx-auto w-full max-w-[430px] px-4 pb-1 pt-6">
+        <AppCard className="mb-4 !p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="mt-1 truncate text-2xl font-bold text-slate-900">
+                שלום, {displayName} 👋
+              </h1>
+              <p className="mt-1 text-sm text-slate-500">{getMonthName(now)}</p>
             </div>
-          </summary>
 
-          <div className="px-4 pb-4">
             <Link
-              href="/settings/templates"
-              className="mb-3 inline-block text-xs font-medium text-emerald-600"
+              href="/expenses/new"
+              className="inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
             >
-              נהל תבניות
+              <Plus size={16} />
+              הוסף הוצאה
             </Link>
-
-            {expenseTemplates.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3">
-                {expenseTemplates.map((template) => (
-                  <Link
-                    key={template.id}
-                    href={{
-                      pathname: "/expenses/new",
-                      query: {
-                        category: template.categories?.[0]?.name ?? "",
-                        title: template.title,
-                        amount:
-                          template.default_amount != null
-                            ? String(template.default_amount)
-                            : "",
-                      },
-                    }}
-                    className="rounded-2xl bg-white px-4 py-4 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <span>{template.title}</span>
-                      <span className="text-xs text-slate-400">
-                        {template.categories?.[0]?.name ?? "ללא קטגוריה"}
-                      </span>
-                    </div>
-
-                    {template.default_amount != null ? (
-                      <p className="mt-2 text-xs text-emerald-600">
-                        ₪{Number(template.default_amount).toFixed(0)}
-                      </p>
-                    ) : null}
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-2xl bg-white px-4 py-4 text-sm text-slate-500">
-                עדיין אין תבניות. אפשר ליצור דרך "נהל תבניות".
-              </div>
-            )}
           </div>
-        </details>
-      </AppCard>
+        </AppCard>
 
-      <AppCard className="mb-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-900">תקציב חודשי</h2>
-          <p className="text-lg font-bold text-emerald-600">
-            {budgetAmount > 0
-              ? `נותר ₪${remaining.toFixed(0)}`
-              : "לא הוגדר תקציב"}
-          </p>
+        <div className="mb-4">
+          <AttentionSection items={attentionItems} />
         </div>
 
-        <div className="mb-2 h-3 w-full overflow-hidden rounded-full bg-slate-100">
-          <div
-            className={`h-full rounded-full ${
-              usagePercent >= 100 ? "bg-red-500" : "bg-emerald-500"
-            }`}
-            style={{ width: `${Math.min(usagePercent, 100)}%` }}
+        <AppCard className="mb-4 !p-3.5">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-900">הוספה מהירה</h2>
+            <span className="text-sm">⚡</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {quickActions.map(({ label, icon: Icon, category, title }) => (
+              <Link
+                key={label}
+                href={{
+                  pathname: "/expenses/new",
+                  query: { category, title },
+                }}
+                className="flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-[1.25rem] border border-slate-200 bg-white/80 px-2 py-3 text-center transition hover:bg-white"
+              >
+                <div className="rounded-xl bg-slate-100 p-2 text-slate-700">
+                  <Icon size={15} />
+                </div>
+
+                <span className="text-[11px] font-medium leading-4 text-slate-700">
+                  {label}
+                </span>
+              </Link>
+            ))}
+          </div>
+
+          <details className="mt-3 overflow-hidden rounded-[1.25rem] border border-slate-200 bg-slate-50/70">
+            <summary className="cursor-pointer list-none px-3 py-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-700">
+                  תבניות מהירות
+                </span>
+                <span className="text-slate-400">⌄</span>
+              </div>
+            </summary>
+
+            <div className="px-3 pb-3">
+              <Link
+                href="/settings/templates"
+                className="mb-2 inline-block text-xs font-medium text-emerald-600"
+              >
+                נהל תבניות
+              </Link>
+
+              {expenseTemplates.length > 0 ? (
+                <div className="grid grid-cols-1 gap-2">
+                  {expenseTemplates.map((template) => (
+                    <Link
+                      key={template.id}
+                      href={{
+                        pathname: "/expenses/new",
+                        query: {
+                          category: template.categories?.[0]?.name ?? "",
+                          title: template.title,
+                          amount:
+                            template.default_amount != null
+                              ? String(template.default_amount)
+                              : "",
+                        },
+                      }}
+                      className="rounded-[1rem] border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate">{template.title}</span>
+                        <span className="shrink-0 text-[11px] text-slate-400">
+                          {template.categories?.[0]?.name ?? "ללא קטגוריה"}
+                        </span>
+                      </div>
+
+                      {template.default_amount != null ? (
+                        <p className="mt-1 text-[11px] text-emerald-600">
+                          {currencySymbol}
+                          {Number(template.default_amount).toFixed(0)}
+                        </p>
+                      ) : null}
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-[1rem] border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-500">
+                  עדיין אין תבניות. אפשר ליצור דרך "נהל תבניות".
+                </div>
+              )}
+            </div>
+          </details>
+        </AppCard>
+
+        <div className="mb-4">
+          <BudgetOverviewCard
+            currencySymbol={currencySymbol}
+            budgetAmount={budgetAmount}
+            currentMonthTotal={currentMonthTotal}
+            remaining={remaining}
+            overBudget={overBudget}
+            usagePercent={usagePercent}
+            daysLeft={daysLeft}
+            recommendedDaily={recommendedDaily}
           />
         </div>
 
-        <div className="mb-3 flex items-center justify-between text-sm">
-          <span className="text-slate-500">
-            ₪{currentMonthTotal.toFixed(0)} הוצאות
-          </span>
-          <span
-            className={`font-semibold ${
-              usagePercent >= 100 ? "text-red-500" : "text-emerald-600"
-            }`}
-          >
-            {budgetAmount > 0
-              ? `${usagePercent.toFixed(0)}% נוצל`
-              : "ללא תקציב"}
-          </span>
-          <span className="text-slate-500">
-            {budgetAmount > 0 ? `₪${budgetAmount.toFixed(0)} תקציב` : "—"}
-          </span>
-        </div>
-
-        <div
-          className={`rounded-2xl px-3 py-2 text-sm ${
-            overBudget > 0
-              ? "border border-red-100 bg-red-50 text-red-600"
-              : "border border-emerald-100 bg-emerald-50 text-emerald-700"
-          }`}
-        >
-          {budgetAmount <= 0
-            ? "עדיין לא הוגדר תקציב חודשי במערכת"
-            : overBudget > 0
-            ? `חריגה של ₪${overBudget.toFixed(0)} מהתקציב`
-            : `נותרו ${daysLeft} ימים - מומלץ להוציא עד ₪${recommendedDaily.toFixed(
-                0
-              )} / יום`}
-        </div>
-      </AppCard>
-
-      <section className="mb-5 grid grid-cols-3 gap-3">
-        <AppCard className="p-4 text-center">
-          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
-            <CalendarDays size={20} />
-          </div>
-          <p className="text-3xl font-bold text-slate-900">
-            {currentMonthExpenses.length}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">הוצאות החודש</p>
-        </AppCard>
-
-        <AppCard className="p-4 text-center">
-          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
-            <TrendingDown size={20} />
-          </div>
-          <p className="text-3xl font-bold text-slate-900">
-            {previousMonthTotal > 0 ? `${diffPercent.toFixed(0)}%` : "—"}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">לעומת חודש קודם</p>
-        </AppCard>
-
-        <AppCard className="p-4 text-center">
-          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
-            <DollarSign size={20} />
-          </div>
-          <p className="text-3xl font-bold text-slate-900">
-            ₪{currentMonthTotal.toFixed(0)}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">החודש</p>
-        </AppCard>
-      </section>
-
-      <AppCard className="mb-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-900">
-            הוצאות לפי קטגוריה
-          </h2>
-        </div>
-
-        {groupedByCategory.length > 0 ? (
-          <div className="flex items-center gap-4">
-            <div
-              className="relative flex h-32 w-32 items-center justify-center rounded-full"
-              style={{ background: donutStyle }}
-            >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-center">
-                <span className="text-xs font-semibold text-slate-500">
-                  {groupedByCategory.length}
-                  <br />
-                  קט׳
-                </span>
-              </div>
+        <section className="mb-4 grid grid-cols-3 gap-2">
+          <AppCard className="!rounded-[1.5rem] !p-3 text-center">
+            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+              <CalendarDays size={16} />
             </div>
+            <p className="text-xl font-bold text-slate-900">
+              {currentMonthExpenses.length}
+            </p>
+            <p className="mt-1 text-[10px] leading-4 text-slate-500">הוצאות החודש</p>
+          </AppCard>
 
-            <div className="flex-1 space-y-3">
-              {groupedByCategory.slice(0, 4).map((item) => (
-                <div
-                  key={item.name}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="h-3 w-3 rounded-full"
-                      style={{ backgroundColor: item.dot }}
-                    />
-                    <span className="text-slate-700">{item.name}</span>
-                  </div>
-                  <span className="font-semibold text-slate-900">
-                    ₪{item.amount.toFixed(0)} · {item.percentage.toFixed(0)}%
+          <AppCard className="!rounded-[1.5rem] !p-3 text-center">
+            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+              <TrendingDown size={16} />
+            </div>
+            <p className="text-xl font-bold text-slate-900">
+              {previousMonthTotal > 0 ? `${diffPercent.toFixed(0)}%` : "—"}
+            </p>
+            <p className="mt-1 text-[10px] leading-4 text-slate-500">
+              לעומת חודש קודם
+            </p>
+          </AppCard>
+
+          <AppCard className="!rounded-[1.5rem] !p-3 text-center">
+            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+              <DollarSign size={16} />
+            </div>
+            <p className="text-xl font-bold text-slate-900">
+              {currencySymbol}
+              {currentMonthTotal.toFixed(0)}
+            </p>
+            <p className="mt-1 text-[10px] leading-4 text-slate-500">החודש</p>
+          </AppCard>
+        </section>
+
+        <AppCard className="mb-4 !p-3.5">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-900">הוצאות לפי קטגוריה</h2>
+          </div>
+
+          {groupedByCategory.length > 0 ? (
+            <div className="flex flex-col items-center gap-4">
+              <div
+                className="relative flex h-28 w-28 items-center justify-center rounded-full shadow-inner"
+                style={{ background: donutStyle }}
+              >
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-center shadow-sm">
+                  <span className="text-[10px] font-semibold text-slate-500">
+                    {groupedByCategory.length}
+                    <br />
+                    קט׳
                   </span>
                 </div>
-              ))}
+              </div>
+
+              <div className="w-full space-y-2">
+                {groupedByCategory.slice(0, 4).map((item) => (
+                  <div
+                    key={item.name}
+                    className="flex items-center justify-between gap-3 rounded-[1rem] border border-slate-200 bg-white/70 px-3 py-2.5 text-sm"
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span
+                        className="h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: item.dot }}
+                      />
+                      <span className="truncate text-slate-700">{item.name}</span>
+                    </div>
+                    <span className="shrink-0 font-semibold text-slate-900">
+                      {currencySymbol}
+                      {item.amount.toFixed(0)} · {item.percentage.toFixed(0)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ) : (
-          <p className="text-sm text-slate-500">עדיין אין הוצאות החודש</p>
-        )}
-      </AppCard>
+          ) : (
+            <p className="text-sm text-slate-500">עדיין אין הוצאות החודש</p>
+          )}
+        </AppCard>
 
-<AppCard className="mb-5">
-  <h2 className="mb-3 text-base font-bold text-slate-900">
-    הוצאות אחרונות
-  </h2>
-
-  <LatestExpensesList expenses={latestExpenses} />
-</AppCard>
+        <AppCard className="mb-2 !p-3.5">
+          <h2 className="mb-3 text-sm font-bold text-slate-900">הוצאות אחרונות</h2>
+          <LatestExpensesList expenses={latestExpenses} />
+        </AppCard>
+      </main>
 
       <BottomNav />
     </AppShell>

@@ -1,26 +1,16 @@
-type PageHeaderProps = {
-  title: string;
-  subtitle?: string;
-  action?: React.ReactNode;
+import { ReactNode } from "react";
+
+type AppCardProps = {
+  children: ReactNode;
+  className?: string;
 };
 
-export default function PageHeader({
-  title,
-  subtitle,
-  action,
-}: PageHeaderProps) {
+export default function AppCard({ children, className = "" }: AppCardProps) {
   return (
-    <div className="mb-6 flex items-start justify-between">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-          {title}
-        </h1>
-        {subtitle ? (
-          <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
-        ) : null}
-      </div>
-
-      {action ? <div>{action}</div> : null}
+    <div
+      className={`rounded-[1.75rem] border border-white/35 bg-white/95 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl ${className}`}
+    >
+      {children}
     </div>
   );
 }

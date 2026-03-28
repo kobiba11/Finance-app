@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Gift, Plus, X } from "lucide-react";
+import { Gift, Plus, X, TicketPercent, Clock3 } from "lucide-react";
 import BottomNav from "../components/bottom-nav";
 import AddVoucherForm from "./components/add-voucher-form";
 import FinanceItemRow from "../components/finance-item-row";
@@ -63,7 +63,7 @@ function getStatusLabel(status?: string | null) {
     case "active":
       return "פעיל";
     case "used":
-      return "נוצל";
+      return "מומש";
     case "expired":
       return "פג תוקף";
     default:
@@ -99,6 +99,8 @@ export default function VouchersClient({ householdId, vouchers }: Props) {
       return isDateWithinDays(item.expiry_date, 14);
     }).length;
   }, [items]);
+
+  const totalCount = useMemo(() => items.length, [items]);
 
   const requestDelete = (id: string) => {
     setDeleteId(id);
@@ -136,49 +138,73 @@ export default function VouchersClient({ householdId, vouchers }: Props) {
   };
 
   return (
-    <main className="min-h-screen bg-[#f5f7f8] pb-24">
+    <main className="min-h-screen bg-gradient-to-b from-teal-300 via-cyan-400 to-teal-500 pb-24">
       <div className="mx-auto max-w-[440px] px-4 py-6">
-        <div className="mb-6 flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">שוברים</h1>
-            <p className="mt-1 text-sm text-slate-500">ניהול שוברים וקופונים</p>
+        <section className="mb-4 rounded-[2rem] border border-white/35 bg-white/92 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium text-slate-500">ניהול שוברים וקופונים</p>
+              <h1 className="mt-1 text-3xl font-bold text-slate-900">שוברים</h1>
+              <p className="mt-1 text-sm text-slate-500">
+                מעקב אחרי שוברים, קופונים ותוקף
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsAddOpen(true)}
+              className="inline-flex items-center gap-2 rounded-2xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm font-semibold text-teal-700 transition hover:bg-teal-100"
+            >
+              <Plus size={18} />
+              הוסף
+            </button>
           </div>
+        </section>
 
-          <button
-            type="button"
-            onClick={() => setIsAddOpen(true)}
-            className="flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition active:scale-[0.99]"
-          >
-            <Plus size={18} />
-            הוסף
-          </button>
-        </div>
-
-        <div className="mb-5 grid grid-cols-2 gap-3">
-          <div className="rounded-3xl bg-white p-4 shadow-sm">
-            <p className="text-sm text-slate-500">שווי שוברים פעילים</p>
-            <p className="mt-2 text-3xl font-bold text-emerald-600">
+        <section className="mb-4 grid grid-cols-3 gap-2">
+          <div className="rounded-[1.7rem] border border-white/35 bg-white/92 p-4 text-center shadow-[0_20px_60px_rgba(0,0,0,0.16)] backdrop-blur-xl">
+            <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-100 text-teal-600">
+              <TicketPercent size={18} />
+            </div>
+            <p className="text-xl font-bold text-teal-600">
               {formatCurrency(activeTotal)}
             </p>
+            <p className="mt-1 text-[10px] text-slate-500">שווי פעיל</p>
           </div>
 
-          <div className="rounded-3xl bg-white p-4 shadow-sm">
-            <p className="text-sm text-slate-500">תוקף קרוב</p>
-            <p className="mt-2 text-3xl font-bold text-slate-900">
+          <div className="rounded-[1.7rem] border border-white/35 bg-white/92 p-4 text-center shadow-[0_20px_60px_rgba(0,0,0,0.16)] backdrop-blur-xl">
+            <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-100 text-cyan-600">
+              <Clock3 size={18} />
+            </div>
+            <p className="text-xl font-bold text-slate-900">
               {expiringSoonCount}
             </p>
+            <p className="mt-1 text-[10px] text-slate-500">פגים בקרוב</p>
           </div>
-        </div>
+
+          <div className="rounded-[1.7rem] border border-white/35 bg-white/92 p-4 text-center shadow-[0_20px_60px_rgba(0,0,0,0.16)] backdrop-blur-xl">
+            <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
+              <Gift size={18} />
+            </div>
+            <p className="text-xl font-bold text-slate-900">
+              {totalCount}
+            </p>
+            <p className="mt-1 text-[10px] text-slate-500">סה״כ שוברים</p>
+          </div>
+        </section>
 
         {isAddOpen && (
-          <div className="mb-5 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <section className="mb-5 rounded-[2rem] border border-white/35 bg-white/92 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900">הוספת שובר</h2>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">הוספת שובר</h2>
+                <p className="mt-1 text-sm text-slate-500">מלא את פרטי השובר ושמור</p>
+              </div>
 
               <button
                 type="button"
                 onClick={() => setIsAddOpen(false)}
-                className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100"
+                className="rounded-2xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-50"
               >
                 <X size={18} />
               </button>
@@ -191,10 +217,10 @@ export default function VouchersClient({ householdId, vouchers }: Props) {
                 router.refresh();
               }}
             />
-          </div>
+          </section>
         )}
 
-        <p className="mb-4 text-center text-xs text-slate-400">
+        <p className="mb-4 text-center text-xs text-white/80">
           החלק ימינה לעריכה · שמאלה למחיקה
         </p>
 
@@ -213,11 +239,11 @@ export default function VouchersClient({ householdId, vouchers }: Props) {
                   >
                     <FinanceItemRow
                       icon={<Gift size={20} />}
-                      iconWrapperClassName="bg-purple-100 text-purple-600"
+                      iconWrapperClassName="bg-teal-100 text-teal-600"
                       title={item.name}
                       subtitle={item.company || "ללא חברה"}
                       amount={formatCurrency(amount, item.currency)}
-                      amountClassName="text-purple-600"
+                      amountClassName="text-teal-600"
                       meta={formatDate(item.expiry_date)}
                       badges={
                         <>
@@ -238,7 +264,7 @@ export default function VouchersClient({ householdId, vouchers }: Props) {
                           )}
 
                           {item.redemption_platform && (
-                            <span className="rounded-full bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700">
+                            <span className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700">
                               {item.redemption_platform}
                             </span>
                           )}
@@ -253,7 +279,7 @@ export default function VouchersClient({ householdId, vouchers }: Props) {
                         href={item.redemption_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-block text-sm font-medium text-purple-600"
+                        className="inline-block text-sm font-medium text-teal-600"
                       >
                         מעבר למימוש
                       </a>
@@ -263,14 +289,14 @@ export default function VouchersClient({ householdId, vouchers }: Props) {
               );
             })
           ) : (
-            <div className="rounded-3xl bg-white p-6 text-center text-sm text-slate-500 shadow-sm">
+            <div className="rounded-[2rem] border border-white/35 bg-white/92 p-6 text-center text-sm text-slate-500 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
               עדיין אין שוברים
             </div>
           )}
         </div>
 
         {message && (
-          <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm text-red-600">
+          <div className="mt-4 rounded-[1.5rem] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             {message}
           </div>
         )}
