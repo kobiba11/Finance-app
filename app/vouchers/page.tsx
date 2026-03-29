@@ -31,11 +31,23 @@ export default async function VouchersPage() {
     );
   }
 
-  const { data: vouchers } = await supabase
+  const { data: vouchers, error } = await supabase
     .from("vouchers")
     .select("*")
     .eq("household_id", householdMember.household_id)
     .order("created_at", { ascending: false });
+
+  if (error) {
+    return (
+      <main className="min-h-screen bg-gradient-to-b from-teal-300 via-cyan-400 to-teal-500 pb-24">
+        <div className="mx-auto max-w-[440px] px-4 py-6">
+          <div className="rounded-[2rem] border border-red-200 bg-white/92 p-6 text-center text-sm text-red-600 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+            שגיאה בטעינת השוברים: {error.message}
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <VouchersClient

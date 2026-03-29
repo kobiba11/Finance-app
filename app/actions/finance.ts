@@ -35,6 +35,8 @@ type CreateVoucherInput = {
   expiry_date?: string;
   notes?: string;
   image_url?: string;
+  imageFile?: File | null;
+  source_text?: string;
   status?: "active" | "partially_used" | "used" | "expired";
 };
 
@@ -82,8 +84,49 @@ export async function createVoucher(input: CreateVoucherInput) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  let imageUrl = input.image_url ?? null;
+
+  if (input.imageFile) {
+    const originalName = input.imageFile.name || "voucher-image";
+    const fileExt = originalName.includes(".")
+      ? originalName.split(".").pop()
+      : "jpg";
+
+    const safeExt = fileExt?.toLowerCase() || "jpg";
+    const fileName = `${input.household_id}/${user?.id ?? "anonymous"}/${Date.now()}.${safeExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("vouchers")
+      .upload(fileName, input.imageFile, {
+        upsert: false,
+        contentType: input.imageFile.type || undefined,
+      });
+
+    if (uploadError) {
+      throw new Error(uploadError.message);
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("vouchers")
+      .getPublicUrl(fileName);
+
+    imageUrl = publicUrlData.publicUrl;
+  }
+
   const { error } = await supabase.from("vouchers").insert({
-    ...input,
+    household_id: input.household_id,
+    name: input.name,
+    company: input.company ?? null,
+    value: input.value,
+    currency: input.currency,
+    redeem_where: input.redeem_where ?? null,
+    redemption_platform: input.redemption_platform ?? null,
+    redemption_url: input.redemption_url ?? null,
+    voucher_code: input.voucher_code ?? null,
+    expiry_date: input.expiry_date ?? null,
+    notes: input.notes ?? null,
+    image_url: imageUrl,
+    source_text: input.source_text ?? null,
     created_by: user?.id ?? null,
     status: input.status ?? "active",
   });

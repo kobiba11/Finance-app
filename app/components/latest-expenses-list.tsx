@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatCurrencyAmount } from "@/lib/currency";
 import SwipeableExpenseRow from "./swipeable-expense-row";
+import DeleteExpenseDialog from "./delete-expense-dialog";
 import {
   UtensilsCrossed,
   Car,
@@ -48,6 +49,23 @@ function getCategoryIcon(name: string) {
   }
 }
 
+function getCategoryColors(name: string) {
+  switch (name) {
+    case "אוכל":
+      return { badge: "bg-emerald-100 text-emerald-600" };
+    case "חשבונות":
+      return { badge: "bg-blue-100 text-blue-600" };
+    case "תחבורה":
+      return { badge: "bg-orange-100 text-orange-600" };
+    case "הוצאות בית":
+      return { badge: "bg-indigo-100 text-indigo-600" };
+    case "בילויים":
+      return { badge: "bg-pink-100 text-pink-600" };
+    default:
+      return { badge: "bg-slate-100 text-slate-600" };
+  }
+}
+
 function formatExpenseDate(dateString: string) {
   const date = new Date(dateString);
 
@@ -63,22 +81,29 @@ export default function LatestExpensesList({
 }: LatestExpensesListProps) {
   const router = useRouter();
   const supabase = createClient();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  if (!expenses.length) {
-    return (
-      <div className="rounded-[1.25rem] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-500">
-        עדיין אין הוצאות להצגה
-      </div>
-    );
-  }
+  const [localExpenses, setLocalExpenses] = useState<LatestExpenseRow[]>(expenses);
+  const [deleteTarget, setDeleteTarget] = useState<LatestExpenseRow | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const handleDelete = async (expenseId: string) => {
-    const confirmed = window.confirm("בטוח שברצונך למחוק את ההוצאה?");
-    if (!confirmed) return;
+  useEffect(() => {
+    setLocalExpenses(expenses);
+  }, [expenses]);
+
+  const openDeleteDialog = (expense: LatestExpenseRow) => {
+    setDeleteTarget(expense);
+  };
+
+  const closeDeleteDialog = () => {
+    if (deleteLoading) return;
+    setDeleteTarget(null);
+  };
+
+  const confirmDeleteExpense = async () => {
+    if (!deleteTarget) return;
 
     try {
-      setDeletingId(expenseId);
+      setDeleteLoading(true);
 
       const {
         data: { user },
@@ -101,72 +126,94 @@ export default function LatestExpensesList({
         return;
       }
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("expenses")
         .delete()
-        .eq("id", expenseId)
-        .eq("household_id", membership.household_id)
-        .select("id")
-        .single();
+        .eq("id", deleteTarget.id)
+        .eq("household_id", membership.household_id);
 
-      if (error || !data) {
+      if (error) {
         console.error("Delete expense error:", error);
-        alert("מחיקת ההוצאה נכשלה.");
+        alert(error.message || "שגיאה במחיקת ההוצאה.");
         return;
       }
 
+      setLocalExpenses((prev) =>
+        prev.filter((expense) => expense.id !== deleteTarget.id)
+      );
+      setDeleteTarget(null);
       router.refresh();
     } catch (error) {
       console.error("Unexpected delete error:", error);
       alert("קרתה שגיאה לא צפויה במחיקה.");
     } finally {
-      setDeletingId(null);
+      setDeleteLoading(false);
     }
   };
 
+  const handleEditExpense = (expenseId: string) => {
+    router.push(`/expenses/${expenseId}/edit`);
+  };
+
+  if (!localExpenses.length) {
+    return (
+      <div className="rounded-[1.25rem] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-500">
+        עדיין אין הוצאות להצגה
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-2">
-      {expenses.map((expense) => {
-        const categoryName = expense.categories?.name ?? "אחר";
+    <>
+      <div className="space-y-2">
+        {localExpenses.map((expense) => {
+          const categoryName = expense.categories?.name ?? "אחר";
+          const colors = getCategoryColors(categoryName);
 
-        return (
-          <SwipeableExpenseRow
-            key={expense.id}
-            onEdit={() => router.push(`/expenses/${expense.id}/edit`)}
-            onDelete={() => handleDelete(expense.id)}
-          >
-            <button
-              type="button"
-              disabled={deletingId === expense.id}
-              onClick={() => router.push(`/expenses/${expense.id}/edit`)}
-              className="flex w-full items-center justify-between gap-3 rounded-[1.25rem] border border-slate-200 bg-white/80 px-3 py-3 text-right transition hover:bg-white disabled:opacity-60"
+          return (
+            <SwipeableExpenseRow
+              key={expense.id}
+              onEdit={() => handleEditExpense(expense.id)}
+              onDelete={() => openDeleteDialog(expense)}
             >
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
-                  {getCategoryIcon(categoryName)}
-                </div>
+              <div className="flex w-full items-center justify-between gap-3 rounded-[1.25rem] bg-white px-3 py-3 text-right">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${colors.badge}`}
+                  >
+                    {getCategoryIcon(categoryName)}
+                  </div>
 
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-900">
-                    {expense.title}
-                  </p>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
-                    <span>{categoryName}</span>
-                    <span>•</span>
-                    <span>{formatExpenseDate(expense.expense_date)}</span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-900">
+                      {expense.title}
+                    </p>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
+                      <span>{categoryName}</span>
+                      <span>•</span>
+                      <span>{formatExpenseDate(expense.expense_date)}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="shrink-0 text-left">
-                <p className="text-sm font-bold text-slate-900">
-                  {formatCurrencyAmount(expense.amount, expense.currency)}
-                </p>
+                <div className="shrink-0 text-left">
+                  <p className="text-sm font-bold text-slate-900">
+                    {formatCurrencyAmount(expense.amount, expense.currency)}
+                  </p>
+                </div>
               </div>
-            </button>
-          </SwipeableExpenseRow>
-        );
-      })}
-    </div>
+            </SwipeableExpenseRow>
+          );
+        })}
+      </div>
+
+      <DeleteExpenseDialog
+        open={!!deleteTarget}
+        title={deleteTarget?.title}
+        loading={deleteLoading}
+        onCancel={closeDeleteDialog}
+        onConfirm={confirmDeleteExpense}
+      />
+    </>
   );
 }

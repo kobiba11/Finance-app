@@ -61,25 +61,25 @@ export default function SwipeableExpenseRow({
       suppressClicksTemporarily();
     }
 
-    // ימינה = מחיקה
+    // ימינה = עריכה
     if (currentX >= SWIPE_THRESHOLD) {
       isHandlingRef.current = true;
       animate(x, OPEN_OFFSET, { duration: 0.14 });
 
       setTimeout(() => {
-        onDelete();
+        onEdit();
         resetPosition();
       }, 120);
       return;
     }
 
-    // שמאלה = עריכה
+    // שמאלה = מחיקה
     if (currentX <= -SWIPE_THRESHOLD) {
       isHandlingRef.current = true;
       animate(x, -OPEN_OFFSET, { duration: 0.14 });
 
       setTimeout(() => {
-        onEdit();
+        onDelete();
         resetPosition();
       }, 120);
       return;
@@ -92,25 +92,25 @@ export default function SwipeableExpenseRow({
     <div className="relative overflow-hidden rounded-2xl">
       <div className="absolute inset-0 rounded-2xl bg-white" />
 
-      {/* ימין = מחיקה */}
-      <div className="absolute inset-y-0 right-0 flex items-stretch justify-end">
-        <div className="flex w-24 items-center justify-center rounded-r-2xl bg-red-500 text-white">
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            <Trash2 size={16} />
-            מחק
-          </div>
-        </div>
-      </div>
+{/* צד ימין = מחיקה (אדום) */}
+<div className="absolute inset-y-0 right-0 flex items-stretch justify-end">
+  <div className="flex w-24 items-center justify-center rounded-r-2xl bg-red-500 text-white">
+    <div className="flex items-center gap-2 text-sm font-semibold">
+      <Trash2 size={16} />
+      מחק
+    </div>
+  </div>
+</div>
 
-      {/* שמאל = עריכה */}
-      <div className="absolute inset-y-0 left-0 flex items-stretch justify-start">
-        <div className="flex w-24 items-center justify-center rounded-l-2xl bg-emerald-500 text-white">
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            <Pencil size={16} />
-            ערוך
-          </div>
-        </div>
-      </div>
+{/* צד שמאל = עריכה (ירוק) */}
+<div className="absolute inset-y-0 left-0 flex items-stretch justify-start">
+  <div className="flex w-24 items-center justify-center rounded-l-2xl bg-emerald-500 text-white">
+    <div className="flex items-center gap-2 text-sm font-semibold">
+      <Pencil size={16} />
+      ערוך
+    </div>
+  </div>
+</div>
 
       <motion.div
         drag="x"

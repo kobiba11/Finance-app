@@ -1,8 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { useState } from "react";
 import SwipeableExpenseRow from "./swipeable-expense-row";
 import DeleteExpenseDialog from "./delete-expense-dialog";
 import {
@@ -73,8 +73,13 @@ export default function ExpensesList({
   const router = useRouter();
   const supabase = createClient();
 
+  const [localExpenses, setLocalExpenses] = useState<ExpenseListRow[]>(expenses);
   const [deleteTarget, setDeleteTarget] = useState<ExpenseListRow | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  useEffect(() => {
+    setLocalExpenses(expenses);
+  }, [expenses]);
 
   const openDeleteDialog = (expense: ExpenseListRow) => {
     setDeleteTarget(expense);
@@ -85,69 +90,67 @@ export default function ExpensesList({
     setDeleteTarget(null);
   };
 
-  const confirmDeleteExpense = async () => {
-    if (!deleteTarget) return;
+const confirmDeleteExpense = async () => {
+  if (!deleteTarget) return;
 
-    try {
-      setDeleteLoading(true);
+  try {
+    setDeleteLoading(true);
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-      if (userError || !user) {
-        alert("המשתמש לא מחובר.");
-        return;
-      }
-
-      const { data: membership, error: membershipError } = await supabase
-        .from("household_members")
-        .select("household_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (membershipError || !membership?.household_id) {
-        alert("לא נמצא משק בית למשתמש.");
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("expenses")
-        .delete()
-        .eq("id", deleteTarget.id)
-        .eq("household_id", membership.household_id)
-        .select("id")
-        .single();
-
-      if (error || !data) {
-        console.error("Delete expense error:", error);
-        alert(error?.message || "שגיאה במחיקת ההוצאה.");
-        return;
-      }
-
-      setDeleteTarget(null);
-      router.refresh();
-    } catch (error) {
-      console.error("Unexpected delete error:", error);
-      alert("קרתה שגיאה לא צפויה במחיקה.");
-    } finally {
-      setDeleteLoading(false);
+    if (userError || !user) {
+      alert("המשתמש לא מחובר.");
+      return;
     }
-  };
+
+    const { data: deletedRows, error } = await supabase
+      .from("expenses")
+      .delete()
+      .eq("id", deleteTarget.id)
+      .select("id");
+
+    console.log("deleteTarget.id:", deleteTarget.id);
+    console.log("deletedRows:", deletedRows);
+    console.log("delete error:", error);
+
+    if (error) {
+      alert(error.message || "שגיאה במחיקת ההוצאה.");
+      return;
+    }
+
+    if (!deletedRows || deletedRows.length === 0) {
+      alert("לא נמחקה אף הוצאה בפועל. כנראה יש בעיית הרשאות.");
+      return;
+    }
+
+    setLocalExpenses((prev) =>
+      prev.filter((expense) => expense.id !== deleteTarget.id)
+    );
+    setDeleteTarget(null);
+    router.refresh();
+  } catch (error) {
+    console.error("Unexpected delete error:", error);
+    alert("קרתה שגיאה לא צפויה במחיקה.");
+  } finally {
+    setDeleteLoading(false);
+  }
+};
 
   const handleEditExpense = (expenseId: string) => {
     router.push(`/expenses/${expenseId}/edit`);
   };
 
-  if (expenses.length === 0) {
+  if (localExpenses.length === 0) {
     return <p className="text-sm text-slate-500">{emptyText}</p>;
   }
 
   return (
     <>
       <div className="space-y-3">
-        {expenses.map((expense) => {
+        {localExpenses.map((expense) => {
           const categoryName = expense.categories?.name ?? "אחר";
           const colors = getCategoryColors(categoryName);
 
@@ -157,11 +160,7 @@ export default function ExpensesList({
               onEdit={() => handleEditExpense(expense.id)}
               onDelete={() => openDeleteDialog(expense)}
             >
-              <button
-                type="button"
-                onClick={() => handleEditExpense(expense.id)}
-                className="flex w-full items-center justify-between rounded-2xl bg-white px-3 py-3 text-right transition hover:bg-slate-50"
-              >
+              <div className="flex w-full items-center justify-between rounded-2xl bg-white px-3 py-3 text-right">
                 <div className="flex items-center gap-3">
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-2xl ${colors.badge}`}
@@ -181,7 +180,7 @@ export default function ExpensesList({
                 <p className="font-semibold text-slate-900">
                   ₪{Number(expense.amount).toFixed(2)}
                 </p>
-              </button>
+              </div>
             </SwipeableExpenseRow>
           );
         })}

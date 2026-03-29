@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import AppShell from "../components/app-shell";
 import BottomNav from "../components/bottom-nav";
 import SettingsClient from "./settings-client";
+import LogoutCard from "../components/logout-card";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -25,16 +26,18 @@ export default async function SettingsPage() {
     return (
       <AppShell>
         <main className="mx-auto w-full max-w-[430px] px-4 pb-24 pt-6">
-          
-
           <div className="rounded-[1.75rem] border border-white/35 bg-white/95 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
             <h1 className="text-3xl font-bold text-slate-900">הגדרות</h1>
-            <p className="mt-1 text-sm text-slate-500">ניהול תקציב, מטבע ומשק בית</p>
+            <p className="mt-1 text-sm text-slate-500">
+              ניהול תקציב, מטבע ומשק בית
+            </p>
 
             <div className="mt-6 rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-4 text-sm text-slate-600">
               כדי להשתמש בהגדרות צריך קודם להיות משויך למשק בית.
             </div>
           </div>
+
+          <LogoutCard />
         </main>
 
         <BottomNav />
@@ -72,6 +75,8 @@ export default async function SettingsPage() {
           inviteCode={household?.invite_code ?? ""}
           monthlyBudget={Number(budgetRow?.amount ?? 0)}
         />
+
+        <LogoutCard />
       </main>
 
       <BottomNav />
